@@ -77,7 +77,7 @@ class PostgresDbWriter(PostgresWriter):
             'database': str(db_options['database']),
             'password': str(db_options.get('password', None)) or '',
             'user': str(db_options['username']),
-            }
+        }
         if ':' in str(db_options['database']):
             self.db_options['database'], self.schema = self.db_options['database'].split(':')
         else:

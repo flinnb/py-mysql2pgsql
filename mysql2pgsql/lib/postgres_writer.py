@@ -40,7 +40,7 @@ class PostgresWriter(object):
             determines the PostgreSQL data type. In my opinion this is way too fugly, will need
             to refactor one day.
             """
-            t = lambda v: not v == None
+            t = lambda v: not v is None
             default = (' DEFAULT %s' % QuotedString(column['default']).getquoted()) if t(column['default']) else None
 
             if column['type'] == 'char':
@@ -83,11 +83,11 @@ class PostgresWriter(object):
                 default = None
                 return default, 'date'
             elif column['type'] == 'timestamp':
-                if column['default'] == None:
+                if column['default'] is None:
                     default = None
                 elif "CURRENT_TIMESTAMP" in column['default']:
                     default = ' DEFAULT CURRENT_TIMESTAMP'
-                elif "0000-00-00 00:00" in  column['default']:
+                elif "0000-00-00 00:00" in column['default']:
                     if self.tz:
                         default = " DEFAULT '1970-01-01T00:00:00.000000%s'" % self.tz_offset
                     elif "0000-00-00 00:00:00" in column['default']:
@@ -128,8 +128,8 @@ class PostgresWriter(object):
         if column.get('auto_increment', None):
             return '%s DEFAULT nextval(\'"%s_%s_seq"\'::regclass) NOT NULL' % (
                    column_type, column['table_name'], column['name'])
-                    
-        return '%s%s%s' % (column_type, (default if not default == None else ''), null)
+
+        return '%s%s%s' % (column_type, (default if not default is None else ''), null)
 
     def process_row(self, table, row):
         """Examines row data from MySQL and alters
@@ -139,9 +139,9 @@ class PostgresWriter(object):
         for index, column in enumerate(table.columns):
             hash_key = hash(frozenset(column.items()))
             column_type = self.column_types[hash_key] if hash_key in self.column_types else self.column_type(column)
-            if row[index] == None and ('timestamp' not in column_type or not column['default']):
+            if row[index] is None and ('timestamp' not in column_type or not column['default']):
                 row[index] = '\N'
-            elif row[index] == None and column['default']:
+            elif row[index] is None and column['default']:
                 if self.tz:
                     row[index] = '1970-01-01T00:00:00.000000' + self.tz_offset
                 else:
@@ -154,12 +154,12 @@ class PostgresWriter(object):
                 elif 'text[' in column_type:
                     row[index] = '{%s}' % ','.join('"%s"' % v.replace('"', r'\"') for v in row[index].split(','))
                 else:
-                    row[index] = row[index].replace('\\', r'\\').replace('\n', r'\n').replace('\t', r'\t').replace('\r', r'\r').replace('\0', '')
+                    row[index] = row[index].strip().replace('\\', r'\\').replace('\n', r'\n').replace('\t', r'\t').replace('\r', r'\r').replace('\0', '')
             elif column_type == 'boolean':
                 # We got here because you used a tinyint(1), if you didn't want a bool, don't use that type
                 row[index] = 't' if row[index] not in (None, 0) else 'f' if row[index] == 0 else row[index]
-            elif  isinstance(row[index], (date, datetime)):
-                if  isinstance(row[index], datetime) and self.tz:
+            elif isinstance(row[index], (date, datetime)):
+                if isinstance(row[index], datetime) and self.tz:
                     try:
                         if row[index].tzinfo:
                             row[index] = row[index].astimezone(self.tz).isoformat()
@@ -229,10 +229,10 @@ class PostgresWriter(object):
         primary_index = [idx for idx in table.indexes if idx.get('primary', None)]
         if primary_index:
             index_sql.append('ALTER TABLE "%(table_name)s" ADD CONSTRAINT "%(index_name)s_pkey" PRIMARY KEY(%(column_names)s);' % {
-                    'table_name': table.name,
-                    'index_name': '%s_%s' % (table.name, '_'.join(primary_index[0]['columns'])),
-                    'column_names': ', '.join('"%s"' % col for col in primary_index[0]['columns']),
-                    })
+                'table_name': table.name,
+                'index_name': '%s_%s' % (table.name, '_'.join(primary_index[0]['columns'])),
+                'column_names': ', '.join('"%s"' % col for col in primary_index[0]['columns']),
+            })
         for index in table.indexes:
             if 'primary' in index:
                 continue
@@ -240,11 +240,11 @@ class PostgresWriter(object):
             index_name = '%s_%s' % (table.name, '_'.join(index['columns']))
             index_sql.append('DROP INDEX IF EXISTS "%s" CASCADE;' % index_name)
             index_sql.append('CREATE %(unique)sINDEX "%(index_name)s" ON "%(table_name)s" (%(column_names)s);' % {
-                    'unique': unique,
-                    'index_name': index_name,
-                    'table_name': table.name,
-                    'column_names': ', '.join('"%s"' % col for col in index['columns']),
-                    })
+                'unique': unique,
+                'index_name': index_name,
+                'table_name': table.name,
+                'column_names': ', '.join('"%s"' % col for col in index['columns']),
+            })
 
         return index_sql
 
