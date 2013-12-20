@@ -1,8 +1,9 @@
 import os
+import sys
 from setuptools import setup
 
 install_requires = [
-    'mysql-python>=1.2.3', 
+    'mysql-python>=1.2.3',
     'psycopg2>=2.4.2',
     'pyyaml>=3.10.0',
     'pytz',
@@ -10,8 +11,9 @@ install_requires = [
 
 if os.name == 'posix':
     install_requires.append('termcolor>=1.1.0')
-    
-if version < (2,7) or (3,0) <= version <= (3,1):
+
+version = sys.version_info
+if version < (2, 7) or (3, 0) <= version <= (3, 1):
     install_requires += ['argparse']
 
 setup(
@@ -39,6 +41,6 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Topic :: Database',
         'Topic :: Utilities'
-        ],
-    keywords = 'mysql postgres postgresql pgsql psql migration',
-    )
+    ],
+    keywords='mysql postgres postgresql pgsql psql migration',
+)
