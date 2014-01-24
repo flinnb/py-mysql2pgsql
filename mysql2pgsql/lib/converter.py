@@ -22,7 +22,7 @@ class Converter(object):
         tables = [t for t in (t for t in self.reader.tables if t.name not in self.exclude_tables) if not self.only_tables or t.name in self.only_tables]
         if self.only_tables:
             tables.sort(key=lambda t: self.only_tables.index(t.name))
-        
+
         if not self.supress_ddl:
             if self.verbose:
                 print_start_table('START CREATING TABLES')
@@ -36,6 +36,8 @@ class Converter(object):
         if self.force_truncate and self.supress_ddl:
             if self.verbose:
                 print_start_table('START TRUNCATING TABLES')
+
+            self.writer.remove_foreign_keys()
 
             for table in tables:
                 self.writer.truncate(table)
@@ -65,6 +67,12 @@ class Converter(object):
 
             if self.verbose:
                 print_start_table('DONE CREATING INDEXES AND CONSTRAINTS')
+
+        if self.force_truncate and self.supress_ddl:
+            if self.verbose:
+                print_start_table('RESTORING FOREIGN KEYS')
+
+            self.writer.restore_foreign_keys()
 
         if self.verbose:
             print_start_table('\n\n>>>>>>>>>> FINISHED <<<<<<<<<<')
