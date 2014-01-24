@@ -180,7 +180,6 @@ class PostgresDbWriter(PostgresWriter):
         constraint_sql = super(PostgresDbWriter, self).write_constraints(table)
         for sql in constraint_sql:
             self.execute(sql)
-            print(sql)
 
     @status_logger
     def write_contents(self, table, reader):
