@@ -7,7 +7,6 @@ import psycopg2
 
 from . import print_row_progress, status_logger
 from .postgres_writer import PostgresWriter
-from .postgres_fk_helper import PostgresFkHelper
 
 
 class PostgresDbWriter(PostgresWriter):
@@ -85,7 +84,6 @@ class PostgresDbWriter(PostgresWriter):
             self.schema = None
 
         self.open()
-        self.helper = PostgresFkHelper(self.conn)
 
     def open(self):
         self.conn = psycopg2.connect(**self.db_options)
@@ -180,7 +178,6 @@ class PostgresDbWriter(PostgresWriter):
         constraint_sql = super(PostgresDbWriter, self).write_constraints(table)
         for sql in constraint_sql:
             self.execute(sql)
-            print(sql)
 
     @status_logger
     def write_contents(self, table, reader):
@@ -194,10 +191,3 @@ class PostgresDbWriter(PostgresWriter):
         """
         f = self.FileObjFaker(table, reader.read(table), self.process_row, self.verbose)
         self.copy_from(f, '"%s"' % table.name, ['"%s"' % c['name'] for c in table.columns])
-
-    def remove_foreign_keys(self):
-        self.helper.find_all_keys()
-        self.helper.remove_foreign_keys()
-
-    def restore_foreign_keys(self):
-        self.helper.restore_foreign_keys()
