@@ -29,7 +29,7 @@ class DB:
             'db': options['database'],
             'use_unicode': True,
             'charset': 'utf8',
-            }
+        }
 
         if options.get('password', None):
             args['passwd'] = str(options.get('password', None))
@@ -113,6 +113,8 @@ class MysqlReader(object):
                 return 'decimal'
             elif data_type.startswith('double'):
                 return 'double precision'
+            elif data_type.startswith('varbinary'):
+                return 'varchar'
             else:
                 return data_type
 
@@ -121,10 +123,10 @@ class MysqlReader(object):
             for row in self.reader.db.query('EXPLAIN `%s`' % self.name):
                 res = ()
                 for field in row:
-                  if type(field) == unicode:
-                    res += field.encode('utf8'),
-                  else:
-                    res += field,
+                    if type(field) == unicode:
+                        res += field.encode('utf8'),
+                    else:
+                        res += field,
                 length_match = re_column_length.search(res[1])
                 precision_match = re_column_precision.search(res[1])
                 length = length_match.group(1) if length_match else \
@@ -142,8 +144,8 @@ class MysqlReader(object):
                     'auto_increment': res[5] == 'auto_increment',
                     'default': res[4] if not res[4] == 'NULL' else None,
                     'select': '`%s`' % name if not field_type.startswith('enum') else
-                        'CASE `%(name)s` WHEN "" THEN NULL ELSE `%(name)s` END' % {'name': name},
-                    }
+                    'CASE `%(name)s` WHEN "" THEN NULL ELSE `%(name)s` END' % {'name': name},
+                }
                 fields.append(desc)
 
             for field in (f for f in fields if f['auto_increment']):
