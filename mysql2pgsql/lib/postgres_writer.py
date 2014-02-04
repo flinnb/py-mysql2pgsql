@@ -43,6 +43,9 @@ class PostgresWriter(object):
             t = lambda v: not v is None
             default = (' DEFAULT %s' % QuotedString(column['default']).getquoted()) if t(column['default']) else None
 
+            if column['length'] == 0:
+                column['length'] = 1
+
             if column['type'] == 'char':
                 default = ('%s::char' % default) if t(default) else None
                 return default, 'character(%s)' % column['length']

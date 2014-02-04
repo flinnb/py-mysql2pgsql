@@ -88,7 +88,6 @@ class MysqlReader(object):
 
         def _convert_type(self, data_type):
             """Normalize MySQL `data_type`"""
-            print(data_type)
             if data_type.startswith('varchar'):
                 return 'varchar'
             elif data_type.startswith('char'):
