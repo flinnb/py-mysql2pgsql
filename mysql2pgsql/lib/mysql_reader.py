@@ -115,6 +115,8 @@ class MysqlReader(object):
                 return 'double precision'
             elif data_type.startswith('varbinary'):
                 return 'varchar'
+            elif data_type.startswith('binary'):
+                return 'char'
             else:
                 return data_type
 
